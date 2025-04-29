@@ -57,6 +57,10 @@ def create_account():
     
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
+
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return jsonify({"error": "Account with this username already exists"}), 409
     
     encrypted_password = cipher.encrypt(password.encode('utf-8')).decode('utf-8')
 
@@ -78,13 +82,13 @@ def login():
 
     user = User.query.filter_by(username=username).first()
 
-    if user:
-        decrypted_password = cipher.decrypt(user.password.encode('utf-8')).decode('utf-8')
+    if not user:
+        return jsonify({"error": "Invalid username or password"}), 401
 
-        if decrypted_password == password:
-            return jsonify({"message": "Login successful!"}), 200
-        else:
-            return jsonify({"error": "Invalid username or password"}), 401
+    decrypted_password = cipher.decrypt(user.password.encode('utf-8')).decode('utf-8')
+
+    if decrypted_password == password:
+        return jsonify({"message": "Login successful!"}), 200
     else:
         return jsonify({"error": "Invalid username or password"}), 401
 
