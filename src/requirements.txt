@@ -3,3 +3,4 @@ gunicorn
 requests
 flask_sqlalchemy
 cryptography
+flask-cors
