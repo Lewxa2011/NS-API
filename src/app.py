@@ -1,12 +1,7 @@
-import os
 from flask import Flask, render_template, request, jsonify
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = Flask(__name__)
-API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
 @app.route('/')
 def index():
@@ -18,23 +13,22 @@ def get_weather():
     if not city:
         return jsonify({'error': 'City parameter is required.'}), 400
 
-    url = (
-        f"https://api.openweathermap.org/data/2.5/weather"
-        f"?q={city}&appid={API_KEY}&units=metric"
-    )
+    # Use wttr.in for no-key weather
+    url = f"https://wttr.in/{city}?format=j1"
     resp = requests.get(url)
     if resp.status_code != 200:
         return jsonify({'error': 'City not found or API error.'}), resp.status_code
 
     data = resp.json()
+    # Extract relevant info
+    current = data['current_condition'][0]
     weather = {
-        'name': data['name'],
-        'country': data['sys']['country'],
-        'temp': data['main']['temp'],
-        'feels_like': data['main']['feels_like'],
-        'humidity': data['main']['humidity'],
-        'wind': data['wind']['speed'],
-        'description': data['weather'][0]['description']
+        'name': city.title(),
+        'temp': current['temp_C'],
+        'feels_like': current['FeelsLikeC'],
+        'humidity': current['humidity'],
+        'wind': current['windspeedKmph'],
+        'description': current['weatherDesc'][0]['value']
     }
     return jsonify(weather)
 
