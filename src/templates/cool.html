@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced CSS Demo</title>
+  <style>
+    @layer base, layout, effects, components;
+
+    @property --rotate {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    :root {
+      --primary: hsl(260 100% 60%);
+      --bg: white;
+      --fg: black;
+      --card-bg: hsl(0 0% 100% / 0.8);
+      --rotate: 0deg;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: hsl(240 10% 10%);
+        --fg: hsl(0 0% 90%);
+        --card-bg: hsl(240 10% 20% / 0.8);
+      }
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 200vh;
+    }
+
+    @layer layout {
+      .container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 4rem;
+      }
+
+      .card {
+        background: var(--card-bg);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        transition: transform 0.6s ease;
+      }
+
+      .card:hover {
+        transform: rotateY(10deg) rotateX(5deg);
+      }
+    }
+
+    @layer effects {
+      .glow-text {
+        font-size: 2rem;
+        text-align: center;
+        background: linear-gradient(90deg, var(--primary), cyan);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 0 0.5rem var(--primary));
+        animation: glow 2s infinite alternate ease-in-out;
+      }
+
+      @keyframes glow {
+        0% {
+          filter: drop-shadow(0 0 0.25rem var(--primary));
+        }
+        100% {
+          filter: drop-shadow(0 0 1rem cyan);
+        }
+      }
+
+      .scroll-reveal {
+        view-timeline-name: --scroll;
+        view-timeline-axis: block;
+        animation: fade-in linear both;
+        animation-timeline: --scroll;
+        animation-range: entry 20% cover 40%;
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(4rem);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+
+    @layer components {
+      .card:has(h2:hover) {
+        outline: 3px dashed var(--primary);
+      }
+
+      button {
+        all: unset;
+        padding: 0.75rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        font-weight: bold;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background: hsl(260 100% 50%);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="glow-text scroll-reveal">⚡ Advanced CSS Demo</h1>
+  <div class="container">
+    <div class="card scroll-reveal">
+      <h2>Smart Layout</h2>
+      <p>This card is fully responsive, adaptive, and theme-aware with modern CSS grid and variables.</p>
+      <button>Try Me</button>
+    </div>
+    <div class="card scroll-reveal">
+      <h2>Interactive 3D</h2>
+      <p>Hover to see 3D transforms and blur-based glassmorphism with CSS only.</p>
+      <button>Hover!</button>
+    </div>
+    <div class="card scroll-reveal">
+      <h2>Relational Styling</h2>
+      <p>Using <code>:has()</code> we can apply styles based on inner interactions like hovers.</p>
+      <button>Look Inside</button>
+    </div>
+  </div>
+</body>
+</html>
