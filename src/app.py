@@ -1,103 +1,42 @@
-from flask import Flask, request, jsonify
-import threading
-import requests
-import time
 import os
-from cryptography.fernet import Fernet
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
+from flask import Flask, render_template, request, jsonify
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///accounts.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-
-ENCR_KEY = os.getenv('ENCR_KEY')
-
-if not ENCR_KEY:
-    raise ValueError("ENCR_KEY environment variable is not set!")
-
-cipher = Fernet(ENCR_KEY)
-
-# heartbeat stuff
-heartbeat_started = False
-
-def send_heartbeat():
-    while True:
-        try:
-            requests.get("https://ns-api-970c.onrender.com/")
-            print("Heartbeat sent")
-        except requests.exceptions.RequestException as e:
-            print(f"Error sending heartbeat: {e}")
-        time.sleep(10)
-
-@app.before_request
-def start_heartbeat():
-    global heartbeat_started
-    if not heartbeat_started:
-        heartbeat_started = True
-        heartbeat_thread = threading.Thread(target=send_heartbeat)
-        heartbeat_thread.daemon = True
-        heartbeat_thread.start()
-
-@app.route('/api/account/create', methods=['POST'])
-def create_account():
-    data = request.get_json()
-    
-    username = data.get('username')
-    password = data.get('password')
-    
-    if not username or not password:
-        return jsonify({"error": "Username and password are required"}), 400
-
-    existing_user = User.query.filter_by(username=username).first()
-    if existing_user:
-        return jsonify({"error": "Account with this username already exists"}), 409
-    
-    encrypted_password = cipher.encrypt(password.encode('utf-8')).decode('utf-8')
-
-    new_user = User(username=username, password=encrypted_password)
-    db.session.add(new_user)
-    db.session.commit()
-
-    return jsonify({"message": "Account created successfully!"}), 201
-
-@app.route('/api/account/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    
-    username = data.get('username')
-    password = data.get('password')
-
-    if not username or not password:
-        return jsonify({"error": "Username and password are required"}), 400
-
-    user = User.query.filter_by(username=username).first()
-
-    if not user:
-        return jsonify({"error": "Invalid username or password"}), 401
-
-    decrypted_password = cipher.decrypt(user.password.encode('utf-8')).decode('utf-8')
-
-    if decrypted_password == password:
-        return jsonify({"message": "Login successful!"}), 200
-    else:
-        return jsonify({"error": "Invalid username or password"}), 401
+API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
 @app.route('/')
-def home():
-    return "Hello, World!"
+def index():
+    return render_template('index.html')
 
-with app.app_context():
-    db.create_all()
+@app.route('/weather')
+def get_weather():
+    city = request.args.get('city')
+    if not city:
+        return jsonify({'error': 'City parameter is required.'}), 400
+
+    url = (
+        f"https://api.openweathermap.org/data/2.5/weather"
+        f"?q={city}&appid={API_KEY}&units=metric"
+    )
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        return jsonify({'error': 'City not found or API error.'}), resp.status_code
+
+    data = resp.json()
+    weather = {
+        'name': data['name'],
+        'country': data['sys']['country'],
+        'temp': data['main']['temp'],
+        'feels_like': data['main']['feels_like'],
+        'humidity': data['main']['humidity'],
+        'wind': data['wind']['speed'],
+        'description': data['weather'][0]['description']
+    }
+    return jsonify(weather)
 
 if __name__ == '__main__':
     app.run(debug=True)

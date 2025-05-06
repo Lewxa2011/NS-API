@@ -1,6 +1,3 @@
-flask
-gunicorn
+Flask
+python-dotenv
 requests
-flask_sqlalchemy
-cryptography
-flask-cors

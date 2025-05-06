@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WITW - Where in the World</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 Where in the World...</h1>
+    <div class="search">
+      <input id="cityInput" type="text" placeholder="Enter a city (e.g. Tokyo)" />
+      <button onclick="fetchWeather()">Find Out</button>
+    </div>
+    <div id="output" class="output"></div>
+  </div>
+
+  <script>
+    function describeWeather(desc) {
+      if (desc.includes('snow')) return "Yes, it's snowing ❄️";
+      if (desc.includes('rain')) return "Yes, it's raining ☔";
+      if (desc.includes('cloud')) return "It’s cloudy ☁️";
+      if (desc.includes('clear')) return "It’s clear and sunny ☀️";
+      return `Current condition: ${desc}`;
+    }
+
+    async function fetchWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      const output = document.getElementById('output');
+      if (!city) return;
+
+      output.innerHTML = '<p class="loading">Loading...</p>';
+      try {
+        const res = await fetch(`/weather?city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        output.innerHTML = `
+          <div class="card">
+            <h2>📍 ${data.name}, ${data.country}</h2>
+            <p class="desc">${describeWeather(data.description)}</p>
+            <p>🌡 ${data.temp}°C (Feels like ${data.feels_like}°C)</p>
+            <p>💧 Humidity: ${data.humidity}%</p>
+            <p>🌬 Wind: ${data.wind} m/s</p>
+          </div>
+        `;
+      } catch (err) {
+        output.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
