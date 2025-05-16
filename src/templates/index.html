@@ -1,54 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WITW - Where in the World</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kosher - Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>🌍 Where in the World...</h1>
-    <div class="search">
-      <input id="cityInput" type="text" placeholder="Enter a city (e.g. Tokyo)" />
-      <button onclick="fetchWeather()">Find Out</button>
-    </div>
-    <div id="output" class="output"></div>
+    <header>
+      <h1>Kosher</h1>
+      <p>Indie Game Developer | Freshman | Programmer</p>
+    </header>
+
+    <section class="about">
+      <h2>About Me</h2>
+      <p>Hi! I'm Kosher — a 14-year-old indie dev going into my freshman year. I specialize in making games using C#, and program with Python, and JavaScript.</p>
+      <p>I'm currently working on my skills in C and Assembly.</p>
+    </section>
+
+    <section class="projects">
+      <h2>Projects</h2>
+      <div class="project">
+        <h3>Lethal Ape: Redux</h3>
+        <p>Made by StellaDev, I was a scripter and did other misc tasks.</p>
+        <p>Project closed due to APK getting leaked :(</p>
+      </div>
+      <div class="project">
+        <h3>Legal Apes</h3>
+        <p>Game where you are apes in a court room and fight over randomly generated court cases.</p>
+        <p>WIP</p>
+      </div>
+    </section>
+
+    <section class="contact">
+      <h2>Contact</h2>
+      <p>Discord: <code>gkosher</code></p>
+    </section>
   </div>
-
-  <script>
-    function describeWeather(desc) {
-      if (desc.includes('snow')) return "Yes, it's snowing ❄️";
-      if (desc.includes('rain')) return "Yes, it's raining ☔";
-      if (desc.includes('cloud')) return "It’s cloudy ☁️";
-      if (desc.includes('clear')) return "It’s clear and sunny ☀️";
-      return `Current condition: ${desc}`;
-    }
-
-    async function fetchWeather() {
-      const city = document.getElementById('cityInput').value.trim();
-      const output = document.getElementById('output');
-      if (!city) return;
-
-      output.innerHTML = '<p class="loading">Loading...</p>';
-      try {
-        const res = await fetch(`/weather?city=${encodeURIComponent(city)}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-
-        output.innerHTML = `
-          <div class="card">
-            <h2>📍 ${data.name}, ${data.country}</h2>
-            <p class="desc">${describeWeather(data.description)}</p>
-            <p>🌡 ${data.temp}°C (Feels like ${data.feels_like}°C)</p>
-            <p>💧 Humidity: ${data.humidity}%</p>
-            <p>🌬 Wind: ${data.wind} m/s</p>
-          </div>
-        `;
-      } catch (err) {
-        output.innerHTML = `<p class="error">${err.message}</p>`;
-      }
-    }
-  </script>
 </body>
 </html>
